@@ -2,10 +2,9 @@ import functools
 with open('input.txt') as inp:
     elves = inp.read().split('\n\n')
 
-maximum_cal = 0
+elf_totals = []
 for elf in elves:
-    new_cal = functools.reduce(lambda a, b: a + int(b), elf.split("\n"), 0)
-    if maximum_cal < new_cal:
-        maximum_cal = new_cal
+    elf_totals.append(functools.reduce(lambda a, b: a + int(b), elf.split("\n"), 0))
 
-print(maximum_cal)
+elf_totals.sort()
+print(sum(elf_totals[-3:]))
