@@ -3,11 +3,11 @@ with open('input.txt') as inp:
 
 sum_pr = 0
 pr = "_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-for rs in rucksacks:
-    length = len(rs)
-    sing, = set(rs[:length // 2]) & set(rs[length // 2:])
-    print(f"{sing = }")
-    print(f"{pr.index(sing) = }")
+for i in range(0, len(rucksacks) - 2, 3):
+    rs = rucksacks[i]
+    rs2 = rucksacks[i + 1]
+    rs3 = rucksacks[i + 2]
+    sing, = set(rs) & set(rs2) & set(rs3)
     sum_pr += pr.index(sing)
 
 print(sum_pr)
