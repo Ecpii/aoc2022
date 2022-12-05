@@ -17,8 +17,11 @@ for line in diagram[:-1]:
 for direction in directions[:-1]:
     words = direction.split()
     quant, start, dest = int(words[1]), int(words[3]), int(words[5])
+    temp_queue = deque()
     for i in range(quant):
-        dp[dest].appendleft(dp[start].popleft())
+        temp_queue.append(dp[start].popleft())
+    for i in range(quant):
+        dp[dest].appendleft(temp_queue.pop())
 
 res = ""
 for i in range(num):
