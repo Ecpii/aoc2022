@@ -4,11 +4,9 @@ with open("sample.txt") as inp:
     raw_valves = inp.read().split('\n')[:-1]
 
 total_pressure_released = 0
-time_remaining = 30
 
 valves = {}
-valuable_valves = []
-current_location = 'AA'
+valuable_valves = set()
 
 for raw_valve in raw_valves:
     valve_name = raw_valve[6:8]
@@ -22,45 +20,39 @@ for raw_valve in raw_valves:
     )
 
     if valves[valve_name][0]:
-        valuable_valves.append(valve_name)
+        valuable_valves.add(valve_name)
 
 
-def pressure_of_path(source: str, dest: str, history: list, time: int):
-    if source == dest:
-        return valves[dest][0] * (time - 1), history + [dest]
-    if source in history or not time:
-        return 0, None
-
+def highest_pressure(source: str, dest: str, history: set, time: int, targets: set):
+    if not time or source in history:
+        return 0
     max_pressure = 0
-    best_path = []
+    if source == dest:
+        print(f"Valve {source} opened!")
+        for target in targets - {dest}:
+            max_pressure = max(
+                max_pressure,
+                highest_pressure(dest, target, set(), time - 1, targets - {dest})
+            )
+        return valves[dest][0] * (time - 1) + max_pressure
+
     for path in valves[source][1]:
-        res = pressure_of_path(path, dest, history + [source], time - 1)
-        if res[0] > max_pressure:
-            max_pressure = res[0]
-            best_path = res[1]
-
-    return max_pressure, best_path
-
-
-while time_remaining:
-    max_ppm = 0
-    max_ppm_path = []
-    for unopened_treasure in valuable_valves:
-        cand_pressure, cand_path = pressure_of_path(
-            current_location, unopened_treasure, [], time_remaining
+        # res = highest_pressure(path, dest, history | {source}, time - 1, targets)
+        # if res > max_pressure:
+        #     max_pressure = res
+        max_pressure = max(
+            max_pressure,
+            highest_pressure(path, dest, history | {source}, time - 1, targets)
         )
-        if cand_pressure / len(cand_path) > max_ppm:
-            max_ppm = cand_pressure / len(cand_path)
-            max_ppm_path = cand_path
-    if not max_ppm_path:
-        break
 
-    current_location = max_ppm_path[-1]
-    print(f"Valve {current_location} opened!")
+    return max_pressure
 
-    time_remaining -= len(max_ppm_path) + 1
-    total_pressure_released += valves[current_location][0] * time_remaining
-    valuable_valves.remove(current_location)
 
 pprint.pprint(valves)
+
+for treasure in valuable_valves:
+    total_pressure_released = max(
+        total_pressure_released,
+        highest_pressure('AA', treasure, set(), 30, valuable_valves)
+    )
 print(total_pressure_released)
