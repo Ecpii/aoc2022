@@ -1,11 +1,14 @@
 import pprint
+from collections import defaultdict
 
-with open("sample.txt") as inp:
+with open("input.txt") as inp:
     raw_valves = inp.read().split('\n')[:-1]
 
 total_pressure_released = 0
+starting_time = 30
 
 valves = {}
+paths = defaultdict(dict)
 valuable_valves = set()
 
 for raw_valve in raw_valves:
@@ -23,36 +26,55 @@ for raw_valve in raw_valves:
         valuable_valves.add(valve_name)
 
 
-def highest_pressure(source: str, dest: str, history: set, time: int, targets: set):
-    if not time or source in history:
-        return 0
-    max_pressure = 0
+def find_paths(source):
+    for valve in valves:
+        if valve == source:
+            continue
+        path_length = find_shortest_path(source, valve, set())
+        paths[source][valve] = path_length
+        paths[valve][source] = path_length
+
+
+def find_shortest_path(source, dest, history: set):
+    if dest in paths[source]:
+        return paths[source][dest]
+    if source in history:
+        return starting_time + 1
     if source == dest:
-        print(f"Valve {source} opened!")
-        for target in targets - {dest}:
-            max_pressure = max(
-                max_pressure,
-                highest_pressure(dest, target, set(), time - 1, targets - {dest})
-            )
-        return valves[dest][0] * (time - 1) + max_pressure
+        return 0
 
+    min_length = starting_time + 1
     for path in valves[source][1]:
-        # res = highest_pressure(path, dest, history | {source}, time - 1, targets)
-        # if res > max_pressure:
-        #     max_pressure = res
-        max_pressure = max(
-            max_pressure,
-            highest_pressure(path, dest, history | {source}, time - 1, targets)
-        )
-
-    return max_pressure
+        min_length = min(min_length, find_shortest_path(path, dest, history | {source}))
+    return min_length + 1
 
 
-pprint.pprint(valves)
+def highest_pressure(source: str, dest: str, time: int, targets: set):
+    time -= paths[source][dest]
+    if time <= 0:
+        return 0
+
+
+    if not targets - {dest}:
+        return valves[dest][0] * (time - 1)
+
+    max_pressure = max([
+        highest_pressure(dest, target, time - 1, targets - {dest})
+        for target in targets - {dest}
+    ])
+
+    return valves[dest][0] * (time - 1) + max_pressure
+
+
+for valve in valves:
+    find_paths(valve)
+
+# pprint.pprint(valves)
+# pprint.pprint(paths)
 
 for treasure in valuable_valves:
     total_pressure_released = max(
         total_pressure_released,
-        highest_pressure('AA', treasure, set(), 30, valuable_valves)
+        highest_pressure('AA', treasure, starting_time, valuable_valves)
     )
 print(total_pressure_released)
